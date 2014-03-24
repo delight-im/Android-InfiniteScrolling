@@ -29,6 +29,7 @@ abstract public class InfiniteScrollListener implements OnScrollListener {
 	protected int mPagesLoaded;
 	protected int mItemsTotal;
 	protected boolean mIsLoading;
+	protected boolean mEnabled;
 	
 	public InfiniteScrollListener() {
 		this(DEFAULT_MIN_ITEMS_LEFT);
@@ -44,6 +45,7 @@ abstract public class InfiniteScrollListener implements OnScrollListener {
 		mPagesLoaded = -1;
 		mItemsTotal = 0;
 		mIsLoading = true;
+		mEnabled = true;
 	}
 
 	abstract public void onReloadItems(int pageToRequest);
@@ -51,23 +53,29 @@ abstract public class InfiniteScrollListener implements OnScrollListener {
 
 	@Override
 	public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int itemsTotal) {
-		if (mIsLoading) { // if we still seem to be reloading new items
-			if (itemsTotal > mItemsTotal) { // if the list now has more items than we thought
-				onReloadFinished();
-				mIsLoading = false; // loading seems to have finished as we have more items now
-				mItemsTotal = itemsTotal; // update the total item count
-				mPagesLoaded++; // we have successfully loaded a new page
+		if (mEnabled) {
+			if (mIsLoading) { // if we still seem to be reloading new items
+				if (itemsTotal > mItemsTotal) { // if the list now has more items than we thought
+					onReloadFinished();
+					mIsLoading = false; // loading seems to have finished as we have more items now
+					mItemsTotal = itemsTotal; // update the total item count
+					mPagesLoaded++; // we have successfully loaded a new page
+				}
 			}
-		}
-		else if (mPagesLoaded < mMaxPages) { // if we are not currently reloading new items and we may still load new pages
-			if ((firstVisibleItem+visibleItemCount) > (itemsTotal-mMinItemsLeft)) { // if we have crossed the threshold for reloading
-				onReloadItems(mPagesLoaded+1); // notify the callback that we need to reload new items
-				mIsLoading = true; // we are now waiting for the reload to finish
+			else if (mPagesLoaded < mMaxPages) { // if we are not currently reloading new items and we may still load new pages
+				if ((firstVisibleItem+visibleItemCount) > (itemsTotal-mMinItemsLeft)) { // if we have crossed the threshold for reloading
+					onReloadItems(mPagesLoaded+1); // notify the callback that we need to reload new items
+					mIsLoading = true; // we are now waiting for the reload to finish
+				}
 			}
 		}
 	}
 
 	@Override
 	public void onScrollStateChanged(AbsListView view, int scrollState) { }
+	
+	public void setEnabled(boolean enabled) {
+		mEnabled = enabled;
+	}
 
 }
